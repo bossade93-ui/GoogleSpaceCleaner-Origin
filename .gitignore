@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+*/build/
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.DS_Store
+
+# Secrets — ne jamais committer
+app/google-services.json
+*.keystore
+*.jks
+keystore.properties
+
+# Room schemas exportés (générés, pas à committer tant qu'aucune migration réelle n'existe)
+core/core-data/schemas/
+
+# Logs
+*.log

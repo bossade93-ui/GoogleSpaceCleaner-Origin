@@ -1,0 +1,12 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+        Ce thème habille les éléments système (barre de statut, fond de fenêtre
+        avant que Compose ne prenne le relais) — il ne remplace pas le thème
+        Compose (voir core-ui/theme/Theme.kt), qui gère le vrai Material 3
+        dynamique de l'interface.
+    -->
+    <style name="Theme.GoogleSpaceCleaner" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor" tools:targetApi="21">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
