@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -25,6 +26,13 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModelTest {
+
+    // Partagé entre setMain() et runTest() : le ViewModel lance ses coroutines
+    // (viewModelScope) sur Dispatchers.Main, donc runTest doit piloter le même
+    // scheduler pour pouvoir les faire progresser via advanceUntilIdle(),
+    // sinon elles restent en file d'attente et uiState ne reflète jamais que
+    // sa valeur initiale pendant tout le test.
+    private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var scannedItemDao: ScannedItemDao
     private lateinit var cleanupRepository: CleanupRepository
@@ -39,7 +47,7 @@ class DashboardViewModelTest {
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(StandardTestDispatcher())
+        Dispatchers.setMain(testDispatcher)
         scannedItemDao = mockk()
         cleanupRepository = mockk()
         authStateFlow = MutableStateFlow(AuthState.SignedOut)
@@ -56,7 +64,7 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `aggregates bytes across drive, both photos sources, and gmail`() = runTest {
+    fun `aggregates bytes across drive, both photos sources, and gmail`() = runTest(testDispatcher) {
         coEvery { scannedItemDao.getBySource(DataSource.DRIVE.name) } returns
             listOf(entity(DataSource.DRIVE, 1_000))
         coEvery { scannedItemDao.getBySource(DataSource.PHOTOS_PICKER.name) } returns
@@ -67,6 +75,7 @@ class DashboardViewModelTest {
             listOf(entity(DataSource.GMAIL, 4_000))
 
         val viewModel = DashboardViewModel(scannedItemDao, cleanupRepository, authRepository)
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -78,13 +87,14 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `recoverable bytes only counts items flagged as duplicate`() = runTest {
+    fun `recoverable bytes only counts items flagged as duplicate`() = runTest(testDispatcher) {
         coEvery { scannedItemDao.getBySource(DataSource.DRIVE.name) } returns listOf(
             entity(DataSource.DRIVE, 1_000, flags = "DUPLICATE"),
             entity(DataSource.DRIVE, 500, flags = "")
         )
 
         val viewModel = DashboardViewModel(scannedItemDao, cleanupRepository, authRepository)
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -93,9 +103,10 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `account email is populated once the user is signed in`() = runTest {
+    fun `account email is populated once the user is signed in`() = runTest(testDispatcher) {
         val viewModel = DashboardViewModel(scannedItemDao, cleanupRepository, authRepository)
         authStateFlow.value = AuthState.SignedIn(GoogleAccountInfo("a@b.com", "A B", null))
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -104,10 +115,11 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `recentCleanupsCount reflects the size of the cleanup history`() = runTest {
+    fun `recentCleanupsCount reflects the size of the cleanup history`() = runTest(testDispatcher) {
         coEvery { cleanupRepository.getHistory() } returns listOf(mockk(), mockk(), mockk())
 
         val viewModel = DashboardViewModel(scannedItemDao, cleanupRepository, authRepository)
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -116,8 +128,9 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `isLoading becomes false once refresh completes`() = runTest {
+    fun `isLoading becomes false once refresh completes`() = runTest(testDispatcher) {
         val viewModel = DashboardViewModel(scannedItemDao, cleanupRepository, authRepository)
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()

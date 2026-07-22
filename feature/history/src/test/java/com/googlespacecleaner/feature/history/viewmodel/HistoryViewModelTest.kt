@@ -12,6 +12,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -23,6 +24,13 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
+
+    // Partagé entre setMain() et runTest() : le ViewModel lance ses coroutines
+    // (viewModelScope) sur Dispatchers.Main, donc runTest doit piloter le même
+    // scheduler pour pouvoir les faire progresser via advanceUntilIdle(),
+    // sinon elles restent en file d'attente et uiState ne reflète jamais que
+    // sa valeur initiale pendant tout le test.
+    private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var cleanupRepository: CleanupRepository
 
@@ -37,7 +45,7 @@ class HistoryViewModelTest {
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(StandardTestDispatcher())
+        Dispatchers.setMain(testDispatcher)
         cleanupRepository = mockk()
     }
 
@@ -47,10 +55,11 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `loads history on init`() = runTest {
+    fun `loads history on init`() = runTest(testDispatcher) {
         coEvery { cleanupRepository.getHistory() } returns listOf(action("1"), action("2"))
 
         val viewModel = HistoryViewModel(cleanupRepository)
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -60,7 +69,7 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `successful undo triggers a refresh of the history`() = runTest {
+    fun `successful undo triggers a refresh of the history`() = runTest(testDispatcher) {
         coEvery { cleanupRepository.getHistory() } returnsMany listOf(
             listOf(action("1", CleanupStatus.COMPLETED)),
             listOf(action("1", CleanupStatus.UNDONE))
@@ -68,7 +77,9 @@ class HistoryViewModelTest {
         coEvery { cleanupRepository.undo("1") } returns Result.success(Unit)
 
         val viewModel = HistoryViewModel(cleanupRepository)
+        advanceUntilIdle()
         viewModel.undo("1")
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -78,13 +89,15 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `failed undo surfaces an error message without refreshing`() = runTest {
+    fun `failed undo surfaces an error message without refreshing`() = runTest(testDispatcher) {
         coEvery { cleanupRepository.getHistory() } returns listOf(action("1"))
         coEvery { cleanupRepository.undo("1") } returns
             Result.failure(UnsupportedOperationException("Suppression manuelle uniquement."))
 
         val viewModel = HistoryViewModel(cleanupRepository)
+        advanceUntilIdle()
         viewModel.undo("1")
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -94,12 +107,14 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `dismissError clears the error message`() = runTest {
+    fun `dismissError clears the error message`() = runTest(testDispatcher) {
         coEvery { cleanupRepository.getHistory() } returns listOf(action("1"))
         coEvery { cleanupRepository.undo("1") } returns Result.failure(RuntimeException("erreur"))
 
         val viewModel = HistoryViewModel(cleanupRepository)
+        advanceUntilIdle()
         viewModel.undo("1")
+        advanceUntilIdle()
         viewModel.dismissError()
 
         viewModel.uiState.test {

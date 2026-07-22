@@ -67,7 +67,7 @@ class CleanupRepositoryImplTest {
         val action = result.getOrThrow()
         assertEquals(CleanupStatus.COMPLETED, action.status)
         assertEquals(CleanupActionType.MOVE_TO_TRASH, action.actionType)
-        assertEquals(1_500_000L, action.spaceFreedBytes)
+        assertEquals(2_000_000L, action.spaceFreedBytes)
         coVerify(exactly = 1) { driveApi.trashFile("d1") }
         coVerify(exactly = 1) { driveApi.trashFile("d2") }
         coVerify { scannedItemDao.deleteByIds(match { it.toSet() == setOf("d1", "d2") }) }

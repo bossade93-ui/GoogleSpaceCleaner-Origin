@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -26,6 +27,13 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CleanupViewModelTest {
+
+    // Partagé entre setMain() et runTest() : le ViewModel lance ses coroutines
+    // (viewModelScope) sur Dispatchers.Main, donc runTest doit piloter le même
+    // scheduler pour pouvoir les faire progresser via advanceUntilIdle(),
+    // sinon elles restent en file d'attente et uiState ne reflète jamais que
+    // sa valeur initiale pendant tout le test.
+    private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var selectionRepository: SelectionRepository
     private lateinit var cleanupRepository: CleanupRepository
@@ -39,7 +47,7 @@ class CleanupViewModelTest {
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(StandardTestDispatcher())
+        Dispatchers.setMain(testDispatcher)
         selectionFlow = MutableStateFlow(emptyList())
         selectionRepository = mockk(relaxed = true) {
             every { selection } returns selectionFlow
@@ -53,9 +61,10 @@ class CleanupViewModelTest {
     }
 
     @Test
-    fun `items from selection are all checked by default`() = kotlinx.coroutines.test.runTest {
+    fun `items from selection are all checked by default`() = kotlinx.coroutines.test.runTest(testDispatcher) {
         val viewModel = CleanupViewModel(selectionRepository, cleanupRepository)
         selectionFlow.value = listOf(item("a"), item("b"))
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -64,9 +73,10 @@ class CleanupViewModelTest {
     }
 
     @Test
-    fun `toggling an item removes it from the checked set`() = kotlinx.coroutines.test.runTest {
+    fun `toggling an item removes it from the checked set`() = kotlinx.coroutines.test.runTest(testDispatcher) {
         val viewModel = CleanupViewModel(selectionRepository, cleanupRepository)
         selectionFlow.value = listOf(item("a"), item("b"))
+        advanceUntilIdle()
 
         viewModel.toggleItem("a")
 
@@ -77,9 +87,10 @@ class CleanupViewModelTest {
     }
 
     @Test
-    fun `confirmDeletion with no selection does nothing`() = kotlinx.coroutines.test.runTest {
+    fun `confirmDeletion with no selection does nothing`() = kotlinx.coroutines.test.runTest(testDispatcher) {
         val viewModel = CleanupViewModel(selectionRepository, cleanupRepository)
         selectionFlow.value = listOf(item("a"))
+        advanceUntilIdle()
         viewModel.toggleItem("a") // décoche tout
 
         viewModel.confirmDeletion()
@@ -88,7 +99,7 @@ class CleanupViewModelTest {
     }
 
     @Test
-    fun `successful confirmDeletion clears the selection and reports success`() = kotlinx.coroutines.test.runTest {
+    fun `successful confirmDeletion clears the selection and reports success`() = kotlinx.coroutines.test.runTest(testDispatcher) {
         val successAction = CleanupAction(
             id = "action-1",
             itemSources = mapOf("a" to DataSource.DRIVE),
@@ -101,8 +112,10 @@ class CleanupViewModelTest {
 
         val viewModel = CleanupViewModel(selectionRepository, cleanupRepository)
         selectionFlow.value = listOf(item("a"))
+        advanceUntilIdle()
 
         viewModel.confirmDeletion()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
@@ -112,14 +125,16 @@ class CleanupViewModelTest {
     }
 
     @Test
-    fun `failed confirmDeletion reports failure without clearing selection`() = kotlinx.coroutines.test.runTest {
+    fun `failed confirmDeletion reports failure without clearing selection`() = kotlinx.coroutines.test.runTest(testDispatcher) {
         coEvery { cleanupRepository.executeCleanup(any()) } returns
             Result.failure(java.io.IOException("network error"))
 
         val viewModel = CleanupViewModel(selectionRepository, cleanupRepository)
         selectionFlow.value = listOf(item("a"))
+        advanceUntilIdle()
 
         viewModel.confirmDeletion()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
             val state = expectMostRecentItem()
