@@ -55,4 +55,9 @@ jobs:
           retention-days: 14
 
       - name: Dependency vulnerability check
+        # Sans clé API NVD, la mise à jour de la base OWASP est très bridée par
+        # le NIST et peut prendre des heures au premier lancement : on borne
+        # cette étape pour ne pas bloquer indéfiniment le reste de la CI.
+        timeout-minutes: 5
         run: gradle dependencyCheckAnalyze || true
+        continue-on-error: true
