@@ -17,9 +17,13 @@ workManager = "2.10.0"
 navigationCompose = "2.8.5"
 googleSignIn = "21.3.0"
 securityCrypto = "1.1.0-alpha06"
+HEAD
 sqlcipher = "4.5.4" # ⚠️ "android-database-sqlcipher" est officiellement déprécié par
                      # son éditeur au profit de "sqlcipher-android" (package/API différents).
                      # À migrer avant publication Play Store — voir README "Limitations connues".
+
+sqlcipher = "4.5.4"
+ b50a6c7490df43c1cae9a06c2c25ca0580959977
 junit = "4.13.2"
 androidxTestExt = "1.2.1"
 espresso = "3.6.1"
