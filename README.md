@@ -37,6 +37,7 @@ Auth, Dashboard, Drive, Photos, Gmail, Cleanup, History.
 - **Gmail** n'a pas de détection de doublons (l'API ne fournit aucun hash de contenu)
 - Tests d'UI instrumentés (Compose) non encore écrits — la couverture actuelle est unitaire (JVM), pas d'automatisation de bout en bout
 - Aucune Migration Room réelle n'existe encore (`fallbackToDestructiveMigration`) — acceptable tant qu'aucune version n'est publiée avec des utilisateurs réels ; **à remplacer avant toute publication**
+- **`net.zetetic:android-database-sqlcipher`** (chiffrement Room) est officiellement déprécié par son éditeur au profit de `net.zetetic:sqlcipher-android` (package et classes différents, ex. `SupportOpenHelperFactory` au lieu de `SupportFactory`) — à migrer avant publication, voir `docs/SETUP.md`
 
 ## Build
 

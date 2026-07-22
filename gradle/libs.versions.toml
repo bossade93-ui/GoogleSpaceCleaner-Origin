@@ -17,7 +17,9 @@ workManager = "2.10.0"
 navigationCompose = "2.8.5"
 googleSignIn = "21.3.0"
 securityCrypto = "1.1.0-alpha06"
-sqlcipher = "4.6.1"
+sqlcipher = "4.5.4" # ⚠️ "android-database-sqlcipher" est officiellement déprécié par
+                     # son éditeur au profit de "sqlcipher-android" (package/API différents).
+                     # À migrer avant publication Play Store — voir README "Limitations connues".
 junit = "4.13.2"
 androidxTestExt = "1.2.1"
 espresso = "3.6.1"
@@ -37,6 +39,7 @@ compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "materialIcons" }
+compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
 material-components = { group = "com.google.android.material", name = "material", version.ref = "materialComponents" }
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
