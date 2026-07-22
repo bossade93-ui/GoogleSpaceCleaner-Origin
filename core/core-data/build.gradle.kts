@@ -16,6 +16,16 @@ android {
     kotlinOptions { jvmTarget = "17" }
 }
 
+// Room (exportSchema = true, voir AppDatabase.kt) écrit ici un snapshot JSON du
+// schéma à chaque version : indispensable pour pouvoir écrire de vraies
+// Migration() plus tard au lieu de fallbackToDestructiveMigration(). Ce
+// répertoire doit être committé dans le dépôt (ne pas l'ignorer dans .gitignore).
+kapt {
+    arguments {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+}
+
 dependencies {
     implementation(project(":core:core-domain"))
     implementation(project(":core:core-security"))

@@ -4,9 +4,9 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 /**
- * Base de données locale. L'ouverture se fait via SupportFactory (SQLCipher)
- * configuré dans core-security/EncryptedStorageProvider avec une clé stockée
- * dans EncryptedSharedPreferences — voir core:core-security.
+ * Base de données locale. L'ouverture se fait via SupportOpenHelperFactory
+ * (SQLCipher), avec une clé fournie par DbKeyProvider et stockée dans
+ * EncryptedSharedPreferences — voir core:core-security.
  */
 @Database(
     entities = [ScannedItemEntity::class, CleanupActionEntity::class],

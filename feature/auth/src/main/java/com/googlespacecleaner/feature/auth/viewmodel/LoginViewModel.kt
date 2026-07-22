@@ -27,8 +27,9 @@ class LoginViewModel @Inject constructor(
                 val account: GoogleSignInAccount = task.result
                 authRepository.handleSignInResult(account)
             } catch (e: Exception) {
-                // Remonté via authState = AuthState.Error dans une version complète
-                // avec gestion d'erreur dédiée (hors scope de ce squelette).
+                authRepository.reportSignInFailure(
+                    e.message ?: "La connexion Google a échoué. Veuillez réessayer."
+                )
             }
         }
     }

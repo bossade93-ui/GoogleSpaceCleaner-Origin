@@ -104,4 +104,14 @@ class GoogleAuthRepository @Inject constructor(
     }
 
     override fun hasScope(scope: String): Boolean = scope in grantedScopes
+
+    /**
+     * Remonte un échec de connexion à l'UI (voir LoginViewModel.onSignInResult) :
+     * sans cela, une ApiException levée par GoogleSignIn.getSignedInAccountFromIntent
+     * était auparavant avalée silencieusement, laissant l'utilisateur bloqué sur
+     * l'écran de connexion sans aucun message d'erreur.
+     */
+    fun reportSignInFailure(message: String) {
+        _authState.value = AuthState.Error(message)
+    }
 }

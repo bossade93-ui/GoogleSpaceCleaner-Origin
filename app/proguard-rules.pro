@@ -39,8 +39,8 @@
 }
 
 # --- SQLCipher (bibliothèque native) ---
--keep class net.sqlcipher.** { *; }
--dontwarn net.sqlcipher.**
+-keep class net.zetetic.database.sqlcipher.** { *; }
+-dontwarn net.zetetic.database.sqlcipher.**
 
 # --- Modèles de domaine (core-domain) ---
 # Sérialisés/désérialisés via les mappers Room, jamais via Gson directement,

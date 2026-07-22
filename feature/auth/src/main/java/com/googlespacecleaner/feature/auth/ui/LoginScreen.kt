@@ -63,6 +63,15 @@ fun LoginScreen(
                 Text("Se connecter avec Google")
             }
 
+            (authState as? AuthState.Error)?.let { error ->
+                Text(
+                    text = error.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            }
+
             Text(
                 text = "En vous connectant, vous acceptez notre politique de " +
                     "confidentialité. Aucune donnée n'est envoyée à un serveur tiers.",

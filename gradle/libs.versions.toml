@@ -17,10 +17,7 @@ workManager = "2.10.0"
 navigationCompose = "2.8.5"
 googleSignIn = "21.3.0"
 securityCrypto = "1.1.0-alpha06"
-sqlcipher = "4.5.4" # ⚠️ "android-database-sqlcipher" est officiellement déprécié par
-                     # son éditeur au profit de "sqlcipher-android" (package/API différents).
-                     # À migrer avant publication Play Store — voir README "Limitations connues".
-                     
+sqlcipher = "4.17.0"
 junit = "4.13.2"
 androidxTestExt = "1.2.1"
 espresso = "3.6.1"
@@ -65,7 +62,7 @@ hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltNa
 
 google-signin = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "googleSignIn" }
 security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
-sqlcipher-android = { group = "net.zetetic", name = "android-database-sqlcipher", version.ref = "sqlcipher" }
+sqlcipher-android = { group = "net.zetetic", name = "sqlcipher-android", version.ref = "sqlcipher" }
 sqlite-ktx = { group = "androidx.sqlite", name = "sqlite-ktx", version = "2.4.0" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }

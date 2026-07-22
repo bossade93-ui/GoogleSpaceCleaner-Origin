@@ -11,8 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import net.sqlcipher.database.SQLiteDatabase
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import javax.inject.Singleton
 
 @Module
@@ -25,11 +24,13 @@ object DatabaseModule {
         @ApplicationContext context: Context,
         dbKeyProvider: DbKeyProvider
     ): AppDatabase {
-        // Charge la bibliothèque native SQLCipher avant toute ouverture de base.
-        SQLiteDatabase.loadLibs(context)
+        // Charge la bibliothèque native SQLCipher avant toute ouverture de base
+        // (net.zetetic:sqlcipher-android — voir docs/SETUP.md pour le détail de
+        // la migration depuis l'ancien android-database-sqlcipher déprécié).
+        System.loadLibrary("sqlcipher")
 
         val passphrase = dbKeyProvider.getOrCreatePassphrase()
-        val factory = SupportFactory(passphrase)
+        val factory = SupportOpenHelperFactory(passphrase)
 
         return Room.databaseBuilder(context, AppDatabase::class.java, "gs_cleaner.db")
             .openHelperFactory(factory)
@@ -37,6 +38,9 @@ object DatabaseModule {
             // qu'une version est en production avec des utilisateurs réels. Acceptable
             // tant qu'aucune release publique n'existe (perte du cache local uniquement,
             // regénérable par un nouveau scan — aucune donnée Google n'est perdue).
+            // Le répertoire room.schemaLocation (voir build.gradle.kts) capture
+            // désormais un snapshot du schéma à chaque bump de version, ce qui
+            // permettra d'écrire de vraies Migration() quand ce sera nécessaire.
             .fallbackToDestructiveMigration()
             .build()
     }
