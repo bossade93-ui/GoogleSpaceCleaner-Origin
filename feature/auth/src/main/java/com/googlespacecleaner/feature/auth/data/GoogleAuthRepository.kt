@@ -10,6 +10,7 @@ import com.googlespacecleaner.core.security.TokenManager
 import com.googlespacecleaner.core.domain.repository.AuthRepository
 import com.googlespacecleaner.core.domain.repository.AuthState
 import com.googlespacecleaner.core.domain.repository.GoogleAccountInfo
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +27,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class GoogleAuthRepository @Inject constructor(
-    private val context: Context,
+    @ApplicationContext private val context: Context,
     private val tokenManager: TokenManager
 ) : AuthRepository {
 
